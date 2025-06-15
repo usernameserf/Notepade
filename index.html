@@ -152,32 +152,22 @@ if(!currentUser){
 
 
 <!-- ✅ Category Sections for Tasks -->
-<div class="section" id="maintenance">
-  <h3>🛠 Maintenance &amp; Management
-    <button onclick="moveCategory('maintenance',-1)">⬆️</button>
-    <button onclick="moveCategory('maintenance',1)">⬇️</button>
-  </h3>
-</div>
+<div id="categoriesContainer">
+  <div class="section" id="maintenance">
+    <h3>🛠 Maintenance &amp; Management</h3>
+  </div>
 
-<div class="section" id="strategy">
-  <h3>📦 Strategic Additions
-    <button onclick="moveCategory('strategy',-1)">⬆️</button>
-    <button onclick="moveCategory('strategy',1)">⬇️</button>
-  </h3>
-</div>
+  <div class="section" id="strategy">
+    <h3>📦 Strategic Additions</h3>
+  </div>
 
-<div class="section" id="savings">
-  <h3>💾 Operational Savings
-    <button onclick="moveCategory('savings',-1)">⬆️</button>
-    <button onclick="moveCategory('savings',1)">⬇️</button>
-  </h3>
-</div>
+  <div class="section" id="savings">
+    <h3>💾 Operational Savings</h3>
+  </div>
 
-<div class="section" id="protection">
-  <h3>🛡 Brand Protection
-    <button onclick="moveCategory('protection',-1)">⬆️</button>
-    <button onclick="moveCategory('protection',1)">⬇️</button>
-  </h3>
+  <div class="section" id="protection">
+    <h3>🛡 Brand Protection</h3>
+  </div>
 </div>
 
 <!-- ✅ Notes Section -->
@@ -188,6 +178,7 @@ if(!currentUser){
   <div id="notesList"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
   // ✅ Show "Saved" notification bar
   function showSavedNotification() {
@@ -402,6 +393,14 @@ function removeCategory(){
     loadNotes();
     history = JSON.parse(localStorage.getItem(`billionaireHistory_${currentUser}`) || "[]");
     updateHistoryLog();
+    new Sortable(document.getElementById('categoriesContainer'), {
+      animation: 150,
+      onEnd: () => {
+        const orderKey = `billionaireCategoryOrder_${currentUser}`;
+        const order = Array.from(document.querySelectorAll('#categoriesContainer > .section')).map(sec => sec.id);
+        localStorage.setItem(orderKey, JSON.stringify(order));
+      }
+    });
   };
 
 function addCategoryToDropdowns(id, name) {
@@ -423,8 +422,8 @@ function createCategorySection(id, name) {
   const section = document.createElement("div");
   section.className = "section";
   section.id = id;
-  section.innerHTML = `<h3>${name} <button onclick="moveCategory('${id}',-1)">⬆️</button> <button onclick="moveCategory('${id}',1)">⬇️</button></h3>`;
-  document.body.insertBefore(section, document.getElementById("notesList").parentElement);
+  section.innerHTML = `<h3>${name}</h3>`;
+  document.getElementById("categoriesContainer").appendChild(section);
 }
 
 function loadCategories(){
@@ -449,28 +448,16 @@ function loadCategories(){
 
 <script>
 function reorderCategorySections(order){
-  const notesSection = document.getElementById("notesList").parentElement;
+  const container = document.getElementById("categoriesContainer");
   order.forEach(id => {
     const section = document.getElementById(id);
     if(section){
-      document.body.insertBefore(section, notesSection);
+      container.appendChild(section);
     }
   });
 }
 
-function moveCategory(id, direction){
-  const orderKey = `billionaireCategoryOrder_${currentUser}`;
-  let order = JSON.parse(localStorage.getItem(orderKey) || "[]");
-  const index = order.indexOf(id);
-  if(index === -1) return;
-  const newIndex = index + direction;
-  if(newIndex < 0 || newIndex >= order.length) return;
-  const temp = order[index];
-  order[index] = order[newIndex];
-  order[newIndex] = temp;
-  localStorage.setItem(orderKey, JSON.stringify(order));
-  reorderCategorySections(order);
-}
+
 </script>
 
 <script>
