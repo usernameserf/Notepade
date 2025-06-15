@@ -1,586 +1,226 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Billionaire Dashboard</title>
-  <meta charset="UTF-8">
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 30px;
-      max-width: 800px;
-      margin: auto;
-      background: #f4f4f4;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Futuristic Dashboard</title>
+<style>
+  /* Reset and base styles */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body, html { height: 100%; font-family: Arial, Helvetica, sans-serif; }
+  body { overflow-x: hidden; color: #fff; }
+  button { cursor: pointer; }
 
-    .section {
-      background: white;
-      padding: 20px;
-      margin-bottom: 30px;
-      border-radius: 8px;
-    }
+  /* Background starfield */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+    z-index: -3;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: transparent url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMTAnIGhlaWdodD0nMTAnIHZpZXdCb3g9JzAgMCAxMCAxMCcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJz48Y2lyY2xlIGN4PScxJyBjeT0nMScgcj0nMScgZmlsbD0nI2ZmZicgZmlsbC1vcGFjaXR5PScwLjEnLz48Y2lyY2xlIGN4PSc2JyBjeT0nNCcgcj0nMC41JyBmaWxsPScjZmZmJyBmaWxsLW9wYWNpdHk9JzAuMicvPjwv'+
+    'c3ZnPg==') repeat;
+    animation: starAnim 50s linear infinite;
+    z-index: -2;
+    opacity: 0.5;
+  }
+  @keyframes starAnim { from { background-position: 0 0; } to { background-position: 1000px 1000px; } }
 
-    .task {
-      margin-bottom: 10px;
-    }
+  /* Login screen */
+  #loginScreen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; }
+  #loginBox { background:rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding:40px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); }
+  #loginBox input { padding:10px; margin-bottom:10px; width:200px; }
+  #loginBox button { padding:10px 20px; }
 
-    .note {
-      background: #fff3cd;
-      padding: 10px;
-      border-radius: 6px;
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-    }
+  /* App layout */
+  #app { display:none; padding-top:60px; }
+  nav { position:fixed; top:0; left:0; right:0; height:60px; backdrop-filter:blur(10px); background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:space-between; padding:0 20px; border-bottom:1px solid rgba(255,255,255,0.2); }
+  #netWorthBtn { padding:10px 20px; border:none; border-radius:5px; background:#0ff; color:#000; font-weight:bold; box-shadow:0 0 10px #0ff; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow:0 0 10px #0ff; } 50% { box-shadow:0 0 20px #0ff; } }
 
-    #saveNotification {
-      display: none;
-      text-align: center;
-      padding: 10px;
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-      border-radius: 6px;
-      margin-bottom: 20px;
-      font-weight: bold;
-    }
+  /* Sections */
+  #sections { max-width:900px; margin:0 auto; padding:20px; }
+  .card { margin-bottom:20px; padding:20px; border-radius:15px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(10px); display:flex; align-items:center; font-size:1.2em; }
+  .card:hover { border-color:#0ff; box-shadow:0 0 10px #0ff; }
 
-    input[type="text"], select {
-      padding: 8px;
-      font-size: 16px;
-      margin-top: 10px;
-      margin-bottom: 10px;
-      width: 100%;
-    }
+  /* Net Worth Tracker panel */
+  #trackerPanel { position:fixed; top:0; right:-100%; width:100%; max-width:600px; height:100%; background:rgba(0,0,0,0.9); backdrop-filter:blur(10px); transition:right 0.5s; padding:20px; overflow-y:auto; }
+  #trackerPanel.open { right:0; }
+  #trackerPanel table { width:100%; border-collapse:collapse; margin-bottom:20px; }
+  #trackerPanel th, #trackerPanel td { padding:8px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.2); }
+  #trackerPanel input, #trackerPanel select { padding:5px; margin-right:5px; }
 
-    button {
-      padding: 8px 12px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 5px;
-    }
-
-    h3 {
-      margin-bottom: 10px;
-    }
-  </style>
+  /* Responsive */
+  @media(max-width:600px){
+    #loginBox { width:90%; }
+    .card { flex-direction:column; align-items:flex-start; }
+  }
+</style>
 </head>
 <body>
-<script>
-const currentUser = localStorage.getItem("billionaireLoggedIn");
-if(!currentUser){
-  window.location.href = "login.html";
-}
-</script>
-<div style="text-align:right;">
-  <a href="account.html" style="margin-right:10px;">Account</a>
-  <button onclick="logout()">Log Out</button>
-</div>
-<!-- ✅ Smart Productivity Timer -->
-<div class="section">
-  <h2>⏱️ Focus Timer</h2>
-
-  <!-- Display -->
-  <div id="timerDisplay" style="font-size: 32px; font-weight: bold; margin-bottom: 20px;">00:00</div>
-
-  <!-- Presets -->
-  <!-- ✅ Preset Timer Boxes -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px;">
-  <div style="background:#e3f2fd; padding:10px; border-radius:8px; text-align:center; cursor:pointer;"
-       onclick="setTimer(25, 5, 'Pomodoro')">
-    🍅 Pomodoro<br><small>25 min focus + 5 break</small>
-  </div>
-
-  <div style="background:#fff3cd; padding:10px; border-radius:8px; text-align:center; cursor:pointer;"
-       onclick="setTimer(52, 17, 'Deep Work')">
-    🧠 Deep Work<br><small>52 min focus + 17 break</small>
-  </div>
-
-  <div style="background:#fce4ec; padding:10px; border-radius:8px; text-align:center; cursor:pointer;"
-       onclick="setTimer(15, 3, 'Speed Sprint')">
-    ⚡ Speed Sprint<br><small>15 min + 3 break</small>
-  </div>
-
-  <div style="background:#ede7f6; padding:10px; border-radius:8px; text-align:center; cursor:pointer;"
-       onclick="setTimer(90, 20, '90-Min Focus')">
-    🎯 90-Min Focus<br><small>90 min + 20 break</small>
+<div id="loginScreen">
+  <div id="loginBox">
+    <h2 style="margin-bottom:10px;">Login</h2>
+    <input id="username" placeholder="Username"><br>
+    <input id="password" type="password" placeholder="Password (any)"><br>
+    <button onclick="login()">Login</button>
+    <div id="loginError" style="color:#f88; margin-top:10px; display:none;">Invalid credentials</div>
   </div>
 </div>
 
-
-  <!-- Manual Entry -->
-  <div style="margin-top: 10px;">
-    <input type="number" id="timerInput" placeholder="Custom min..." style="width:120px;">
-    <button onclick="startTimer()">Start</button>
-    <button onclick="pauseTimer()">Pause</button>
-    <button onclick="resetTimer()">Reset</button>
-  </div>
+<div id="app">
+  <nav>
+    <div>Logged in as <b id="userLabel"></b></div>
+    <button id="netWorthBtn" onclick="toggleTracker()">Net Worth Tracker</button>
+  </nav>
+  <div id="sections"></div>
 </div>
 
+<div id="trackerPanel">
+  <h2>Net Worth Tracker</h2>
+  <table id="marketTable">
+    <thead>
+      <tr><th>Coin</th><th>Symbol</th><th>Price (USD)</th><th>24h %</th><th>Market Cap</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-<!-- ✅ Save Notification -->
-<div id="saveNotification">✅ Saved</div>
+  <h3>Add Holding</h3>
+  <select id="coinSelect"></select>
+  <input type="number" id="coinAmount" placeholder="Amount" min="0" step="any">
+  <button onclick="addHolding()">Add</button>
 
-<!-- ✅ Task Input Section -->
-<!-- ✅ Task Input Section -->
-<div class="section">
-  <h2>Add New Task</h2>
-  <input type="text" id="newTaskInput" placeholder="Task description...">
-
-  <select id="categorySelect">
-    <option value="maintenance">🛠 Maintenance & Management</option>
-    <option value="strategy">📦 Strategic Additions</option>
-    <option value="savings">💾 Operational Savings</option>
-    <option value="protection">🛡 Brand Protection</option>
-  </select>
-
-  <button onclick="addTask()">Add Task</button>
-
-  <hr style="margin: 20px 0;">
-
-  <h3>Add New Category</h3>
-  <input type="text" id="newCategoryInput" placeholder="e.g. Sales, Hiring, Outreach">
-  <button onclick="addCategory()">Add Category</button>
-  <h3 style="margin-top:20px;">Remove Category</h3>
-  <select id="removeCategorySelect">
-    <option value="maintenance">🛠 Maintenance & Management</option>
-    <option value="strategy">📦 Strategic Additions</option>
-    <option value="savings">💾 Operational Savings</option>
-    <option value="protection">🛡 Brand Protection</option>
-  </select>
-  <button onclick="removeCategory()">Remove Category</button>
-</div>
-
-
-<!-- ✅ Category Sections for Tasks -->
-<div id="categoriesContainer">
-  <div class="section" id="maintenance">
-    <h3>🛠 Maintenance &amp; Management</h3>
-  </div>
-
-  <div class="section" id="strategy">
-    <h3>📦 Strategic Additions</h3>
-  </div>
-
-  <div class="section" id="savings">
-    <h3>💾 Operational Savings</h3>
-  </div>
-
-  <div class="section" id="protection">
-    <h3>🛡 Brand Protection</h3>
-  </div>
-</div>
-
-<!-- ✅ Notes Section -->
-<div class="section">
-  <h2>Notes</h2>
-  <input type="text" id="noteInput" placeholder="Add a note...">
-  <button onclick="addNote()">Add Note</button>
-  <div id="notesList"></div>
+  <h3>Your Holdings</h3>
+  <table id="holdingsTable">
+    <thead>
+      <tr><th>Coin</th><th>Amount</th><th>Value (USD)</th><th></th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div>Total Portfolio Value: $<span id="totalValue">0</span></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
-  // ✅ Show "Saved" notification bar
-  function showSavedNotification() {
-    const box = document.getElementById("saveNotification");
-    box.style.display = "block";
-    box.style.opacity = 1;
+const VALID_USER = 'admin8923';
+let marketData = [];
 
-    setTimeout(() => {
-      box.style.opacity = 0;
-      setTimeout(() => { box.style.display = "none"; }, 500);
-    }, 2000);
+function init() {
+  const logged = localStorage.getItem('loggedUser');
+  if (logged === VALID_USER) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('userLabel').textContent = logged;
+    setupSections();
+    fetchMarket();
+    loadHoldings();
   }
-
-  // ✅ Add a new task to selected category
-  function addTask() {
-    const input = document.getElementById("newTaskInput");
-    const text = input.value.trim();
-    const category = document.getElementById("categorySelect").value;
-    if (!text) return;
-
-    const task = createTaskElement(text, false, category);
-    document.getElementById(category).appendChild(task);
-    input.value = "";
-    saveTasks();
-  }
-
-  // ✅ Create task DOM element
-  function createTaskElement(text, checked, category) {
-    const div = document.createElement("div");
-    div.className = "task";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = checked;
-
-    checkbox.onchange = () => {
-      saveTasks();
-      if (checkbox.checked) {
-        const logEntry = {
-          task: text,
-          category,
-          timerUsed: currentTimerLabel,
-          completedAt: new Date().toLocaleString()
-        };
-        history.push(logEntry);
-        localStorage.setItem(`billionaireHistory_${currentUser}`, JSON.stringify(history));
-        updateHistoryLog();
-      }
-    };
-
-    const span = document.createElement("span");
-    span.textContent = " " + text;
-
-    const btn = document.createElement("button");
-    btn.textContent = "🗑";
-    btn.style.marginLeft = "8px";
-    btn.onclick = () => {
-      div.remove();
-      saveTasks();
-    };
-
-    div.appendChild(checkbox);
-    div.appendChild(span);
-    div.appendChild(btn);
-    return div;
-
-  }
-function addCategory() {
-  const input = document.getElementById("newCategoryInput");
-  const newName = input.value.trim();
-  if (!newName) return alert("Enter a category name.");
-
-  const id = newName.toLowerCase().replace(/\s+/g, '-');
-
-  // Prevent duplicates
-  if (document.getElementById(id)) {
-    alert("That category already exists.");
-    return;
-  }
-
-  // Save to localStorage
-  const saved = JSON.parse(localStorage.getItem(`billionaireCategories_${currentUser}`) || "[]");
-  saved.push({ id, name: newName });
-  localStorage.setItem(`billionaireCategories_${currentUser}`, JSON.stringify(saved));
-
-  // Create dropdown options
-  addCategoryToDropdowns(id, newName);
-
-  // Create section
-  createCategorySection(id, newName);
-
-  // Update order
-  const orderKey = `billionaireCategoryOrder_${currentUser}`;
-  const order = JSON.parse(localStorage.getItem(orderKey) || "[]");
-  order.push(id);
-  localStorage.setItem(orderKey, JSON.stringify(order));
-  reorderCategorySections(order);
-
-
-  input.value = "";
-}
-function removeCategory(){
-  const select = document.getElementById("removeCategorySelect");
-  const id = select.value;
-  if(!id) return;
-  if(!confirm("Delete this category and all its tasks?")) return;
-  const section = document.getElementById(id);
-  if(section) section.remove();
-  document.querySelectorAll(`#categorySelect option[value="${id}"]`).forEach(o => o.remove());
-  document.querySelectorAll(`#removeCategorySelect option[value="${id}"]`).forEach(o => o.remove());
-  const tasks = JSON.parse(localStorage.getItem(`billionaireTasks_${currentUser}`) || "{}");
-  delete tasks[id];
-  localStorage.setItem(`billionaireTasks_${currentUser}`, JSON.stringify(tasks));
-  let saved = JSON.parse(localStorage.getItem(`billionaireCategories_${currentUser}`) || "[]");
-  saved = saved.filter(c => c.id !== id);
-  localStorage.setItem(`billionaireCategories_${currentUser}`, JSON.stringify(saved));
-  const orderKey = `billionaireCategoryOrder_${currentUser}`;
-  let order = JSON.parse(localStorage.getItem(orderKey) || "[]");
-  order = order.filter(cid => cid !== id);
-  localStorage.setItem(orderKey, JSON.stringify(order));
-  reorderCategorySections(order);
-  saveTasks();
 }
 
-  // ✅ Save all tasks by category to localStorage
-  function saveTasks() {
-    const defaultCats = ["maintenance", "strategy", "savings", "protection"];
-    const savedCats = JSON.parse(localStorage.getItem(`billionaireCategories_${currentUser}`) || "[]").map(c => c.id);
-    const categories = defaultCats.concat(savedCats);
-    const data = {};
-
-    categories.forEach(cat => {
-      data[cat] = [];
-      document.querySelectorAll(`#${cat} .task`).forEach(task => {
-        const textElem = task.querySelector("span");
-        const text = textElem ? textElem.textContent.trim() : "";
-        const checked = task.querySelector("input").checked;
-        data[cat].push({ text, checked });
-      });
-    });
-
-    localStorage.setItem(`billionaireTasks_${currentUser}`, JSON.stringify(data));
-    showSavedNotification();
-  }
-
-  // ✅ Load tasks from localStorage and display them
-  function loadTasks() {
-    const data = JSON.parse(localStorage.getItem(`billionaireTasks_${currentUser}`) || "{}");
-    Object.keys(data).forEach(category => {
-      const section = document.getElementById(category);
-      data[category].forEach(({ text, checked }) => {
-        const task = createTaskElement(text, checked, category);
-        section.appendChild(task);
-      });
-    });
-  }
-
-  // ✅ Add a new note
-  function addNote() {
-    const input = document.getElementById("noteInput");
-    const text = input.value.trim();
-    if (!text) return;
-
-    const note = createNoteElement(text);
-    document.getElementById("notesList").appendChild(note);
-    input.value = "";
-    saveNotes();
-  }
-
-  // ✅ Create note DOM element
-  function createNoteElement(text) {
-    const div = document.createElement("div");
-    div.className = "note";
-
-    const span = document.createElement("span");
-    span.textContent = text;
-
-    const btn = document.createElement("button");
-    btn.textContent = "🗑";
-    btn.onclick = () => {
-      div.remove();
-      saveNotes();
-    };
-
-    div.appendChild(span);
-    div.appendChild(btn);
-    return div;
-  }
-
-  // ✅ Save all notes to localStorage
-  function saveNotes() {
-    const notes = [];
-    document.querySelectorAll("#notesList .note span").forEach(n => notes.push(n.textContent));
-    localStorage.setItem(`billionaireNotes_${currentUser}`, JSON.stringify(notes));
-    showSavedNotification();
-  }
-
-  // ✅ Load saved notes from localStorage
-  function loadNotes() {
-    const saved = JSON.parse(localStorage.getItem(`billionaireNotes_${currentUser}`) || "[]");
-    const noteList = document.getElementById("notesList");
-    saved.forEach(text => {
-      const note = createNoteElement(text);
-      noteList.appendChild(note);
-    });
-  }
-
-  // ✅ Initialize everything on page load
-  window.onload = () => {
-    loadCategories();
-    loadTasks();
-    loadNotes();
-    history = JSON.parse(localStorage.getItem(`billionaireHistory_${currentUser}`) || "[]");
-    updateHistoryLog();
-    new Sortable(document.getElementById('categoriesContainer'), {
-      animation: 150,
-      onEnd: () => {
-        const orderKey = `billionaireCategoryOrder_${currentUser}`;
-        const order = Array.from(document.querySelectorAll('#categoriesContainer > .section')).map(sec => sec.id);
-        localStorage.setItem(orderKey, JSON.stringify(order));
-      }
-    });
-  };
-
-function addCategoryToDropdowns(id, name) {
-  const taskSelect = document.getElementById("categorySelect");
-  const removeSelect = document.getElementById("removeCategorySelect");
-
-  const option1 = document.createElement("option");
-  option1.value = id;
-  option1.textContent = name;
-  taskSelect.appendChild(option1);
-
-  const option2 = document.createElement("option");
-  option2.value = id;
-  option2.textContent = name;
-  removeSelect.appendChild(option2);
-}
-
-function createCategorySection(id, name) {
-  const section = document.createElement("div");
-  section.className = "section";
-  section.id = id;
-  section.innerHTML = `<h3>${name}</h3>`;
-  document.getElementById("categoriesContainer").appendChild(section);
-}
-
-function loadCategories(){
-  const saved = JSON.parse(localStorage.getItem(`billionaireCategories_${currentUser}`) || "[]");
-  saved.forEach(({id, name}) => {
-    addCategoryToDropdowns(id, name);
-    createCategorySection(id, name);
-  });
-  const orderKey = `billionaireCategoryOrder_${currentUser}`;
-  const defaultOrder = ["maintenance","strategy","savings","protection"].concat(saved.map(c => c.id));
-  let order = JSON.parse(localStorage.getItem(orderKey) || "[]");
-  if(order.length === 0){
-    order = defaultOrder;
-    localStorage.setItem(orderKey, JSON.stringify(order));
+function login() {
+  const u = document.getElementById('username').value.trim();
+  if (u === VALID_USER) {
+    localStorage.setItem('loggedUser', u);
+    init();
   } else {
-    defaultOrder.forEach(id => { if(!order.includes(id)) order.push(id); });
-    order = order.filter(id => defaultOrder.includes(id));
-    localStorage.setItem(orderKey, JSON.stringify(order));
+    document.getElementById('loginError').style.display = 'block';
   }
-  reorderCategorySections(order);
-</script>
+}
 
-<script>
-function reorderCategorySections(order){
-  const container = document.getElementById("categoriesContainer");
-  order.forEach(id => {
-    const section = document.getElementById(id);
-    if(section){
-      container.appendChild(section);
+function setupSections(){
+  const defaultOrder = ['maintenance','strategy','savings','protection'];
+  const order = JSON.parse(localStorage.getItem('sectionsOrder')||'[]');
+  const finalOrder = order.length?order:defaultOrder;
+  const container=document.getElementById('sections');
+  container.innerHTML='';
+  finalOrder.forEach(id=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.id=id;
+    let label='';
+    switch(id){
+      case 'maintenance':label='\uD83D\uDD27 Maintenance & Management';break;
+      case 'strategy':label='\uD83D\uDCE6 Strategic Additions';break;
+      case 'savings':label='\uD83D\uDCBE Operational Savings';break;
+      case 'protection':label='\uD83D\uDEE1\uFE0F Brand Protection';break;
     }
+    card.textContent=label;
+    container.appendChild(card);
   });
+  new Sortable(container,{animation:150,onEnd:e=>{
+    const newOrder=Array.from(container.children).map(c=>c.id);
+    localStorage.setItem('sectionsOrder',JSON.stringify(newOrder));
+  }});
 }
 
-
-</script>
-
-<script>
-// ✅ Timer Setup
-let currentTimerLabel = "None"; // Tracks which timer is active
-let history = []; // Stores task completion data
-let timerInterval;
-let timeRemaining = 0;
-let isPaused = false;
-let breakTime = 0;
-let inBreak = false;
-
-// ✅ Update the timer display
-function updateTimerDisplay() {
-  const min = String(Math.floor(timeRemaining / 60)).padStart(2, '0');
-  const sec = String(timeRemaining % 60).padStart(2, '0');
-  document.getElementById("timerDisplay").textContent = `${min}:${sec}`;
+function toggleTracker(){
+  document.getElementById('trackerPanel').classList.toggle('open');
 }
 
-// ✅ Set timer using a preset
-function setTimer(mins, breakMins = 0, label = "Custom") {
-  document.getElementById("timerInput").value = mins;
-  breakTime = breakMins;
-  currentTimerLabel = label;
-  startTimer();
+async function fetchMarket(){
+  try{
+    const res=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false');
+    marketData=await res.json();
+    const tbody=document.querySelector('#marketTable tbody');
+    const select=document.getElementById('coinSelect');
+    tbody.innerHTML='';
+    select.innerHTML='';
+    marketData.forEach(c=>{
+      tbody.insertAdjacentHTML('beforeend',`<tr><td>${c.name}</td><td>${c.symbol.toUpperCase()}</td><td>${c.current_price}</td><td>${c.price_change_percentage_24h?.toFixed(2)}%</td><td>${c.market_cap}</td></tr>`);
+      const opt=document.createElement('option');
+      opt.value=c.id; opt.textContent=c.name; select.appendChild(opt);
+    });
+  }catch(e){console.error(e);}
 }
 
-// ✅ Start the timer
-function startTimer() {
-  const minutes = parseInt(document.getElementById("timerInput").value);
-  if (isNaN(minutes) || minutes <= 0) return alert("Enter a valid time in minutes.");
-
-  if (!isPaused) timeRemaining = minutes * 60;
-  isPaused = false;
-  inBreak = false;
-
-  updateTimerDisplay();
-  clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    if (timeRemaining > 0) {
-      timeRemaining--;
-      updateTimerDisplay();
-    } else {
-      clearInterval(timerInterval);
-      // ✅ If break time is set, start break automatically
-      if (breakTime > 0 && !inBreak) {
-        alert("✅ Focus session done! Break time starts now.");
-        inBreak = true;
-        timeRemaining = breakTime * 60;
-        updateTimerDisplay();
-        startTimer(); // restart with break
-      } else {
-        alert("⏰ Time's up!");
-      }
-    }
-  }, 1000);
+function addHolding(){
+  const coinId=document.getElementById('coinSelect').value;
+  const amount=parseFloat(document.getElementById('coinAmount').value);
+  if(!coinId || isNaN(amount))return;
+  const holdings=getHoldings();
+  const existing=holdings.find(h=>h.id===coinId);
+  if(existing){existing.amount+=amount;}else{holdings.push({id:coinId,amount});}
+  localStorage.setItem('holdings',JSON.stringify(holdings));
+  document.getElementById('coinAmount').value='';
+  renderHoldings();
 }
 
-// ✅ Pause the timer
-function pauseTimer() {
-  clearInterval(timerInterval);
-  isPaused = true;
+function getHoldings(){
+  return JSON.parse(localStorage.getItem('holdings')||'[]');
 }
 
-// ✅ Reset the timer
-function resetTimer() {
-  clearInterval(timerInterval);
-  timeRemaining = 0;
-  isPaused = false;
-  inBreak = false;
-  updateTimerDisplay();
+function loadHoldings(){
+  renderHoldings();
 }
 
-// Update History For Logger
-function updateHistoryLog() {
-  const log = document.getElementById("historyLog");
-  log.innerHTML = "";
-
-  if (history.length === 0) {
-    log.innerHTML = "<i>No completed tasks yet.</i>";
-    return;
-  }
-
-  history.slice().reverse().forEach((entry, i) => {
-    const index = history.length - 1 - i; // reverse index for proper delete
-
-    const logItem = document.createElement("div");
-    logItem.style.marginBottom = "10px";
-    logItem.innerHTML = `
-      ✅ <strong>${entry.task}</strong> (${entry.category})<br>
-      Timer: <b>${entry.timerUsed}</b> | Completed: ${entry.completedAt}
-    `;
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "🗑 Remove";
-    deleteBtn.style.marginTop = "5px";
-    deleteBtn.style.background = "#ffdddd";
-    deleteBtn.style.border = "none";
-    deleteBtn.style.padding = "4px 8px";
-    deleteBtn.style.cursor = "pointer";
-    deleteBtn.style.borderRadius = "6px";
-    deleteBtn.onclick = () => {
-      if (confirm("Remove this entry from the log?")) {
-        history.splice(index, 1);
-        localStorage.setItem(`billionaireHistory_${currentUser}`, JSON.stringify(history));
-        updateHistoryLog();
-      }
-    };
-
-    logItem.appendChild(document.createElement("br"));
-    logItem.appendChild(deleteBtn);
-    logItem.appendChild(document.createElement("hr"));
-    log.appendChild(logItem);
+function renderHoldings(){
+  const holdings=getHoldings();
+  const tbody=document.querySelector('#holdingsTable tbody');
+  tbody.innerHTML='';
+  let total=0;
+  holdings.forEach((h,i)=>{
+    const coin=marketData.find(c=>c.id===h.id);
+    if(!coin)return;
+    const value=h.amount*coin.current_price;
+    total+=value;
+    tbody.insertAdjacentHTML('beforeend',`<tr><td>${coin.name}</td><td>${h.amount}</td><td>${value.toFixed(2)}</td><td><button onclick="removeHolding(${i})">✖</button></td></tr>`);
   });
+  document.getElementById('totalValue').textContent=total.toFixed(2);
 }
-function logout(){localStorage.removeItem("billionaireLoggedIn");window.location.href="login.html";}
+
+function removeHolding(index){
+  const holdings=getHoldings();
+  holdings.splice(index,1);
+  localStorage.setItem('holdings',JSON.stringify(holdings));
+  renderHoldings();
+}
+
+window.onload=init;
 </script>
-<!-- ✅ Productivity Log -->
-
-<div class="section">
-  <h2>📊 Task Completion Log</h2>
-  <div id="historyLog" style="font-family: monospace;"></div>
-</div>
-
 </body>
 </html>
