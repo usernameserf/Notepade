@@ -137,6 +137,14 @@ if(!currentUser){
   <h3>Add New Category</h3>
   <input type="text" id="newCategoryInput" placeholder="e.g. Sales, Hiring, Outreach">
   <button onclick="addCategory()">Add Category</button>
+  <h3 style="margin-top:20px;">Remove Category</h3>
+  <select id="removeCategorySelect">
+    <option value="maintenance">🛠 Maintenance & Management</option>
+    <option value="strategy">📦 Strategic Additions</option>
+    <option value="savings">💾 Operational Savings</option>
+    <option value="protection">🛡 Brand Protection</option>
+  </select>
+  <button onclick="removeCategory()">Remove Category</button>
 </div>
 
 
@@ -256,22 +264,42 @@ function addCategory() {
   // Create section
   createCategorySection(id, newName);
 
+
   input.value = "";
+}
+function removeCategory(){
+  const select = document.getElementById("removeCategorySelect");
+  const id = select.value;
+  if(!id) return;
+  if(!confirm("Delete this category and all its tasks?")) return;
+  const section = document.getElementById(id);
+  if(section) section.remove();
+  document.querySelectorAll(`#categorySelect option[value="${id}"]`).forEach(o => o.remove());
+  document.querySelectorAll(`#removeCategorySelect option[value="${id}"]`).forEach(o => o.remove());
+  const tasks = JSON.parse(localStorage.getItem(`billionaireTasks_${currentUser}`) || "{}");
+  delete tasks[id];
+  localStorage.setItem(`billionaireTasks_${currentUser}`, JSON.stringify(tasks));
+  let saved = JSON.parse(localStorage.getItem(`billionaireCategories_${currentUser}`) || "[]");
+  saved = saved.filter(c => c.id !== id);
+  localStorage.setItem(`billionaireCategories_${currentUser}`, JSON.stringify(saved));
+  saveTasks();
 }
 
   // ✅ Save all tasks by category to localStorage
   function saveTasks() {
-    const categories = ["maintenance", "strategy", "savings", "protection"];
+    const defaultCats = ["maintenance", "strategy", "savings", "protection"];
+    const savedCats = JSON.parse(localStorage.getItem(`billionaireCategories_${currentUser}`) || "[]").map(c => c.id);
+    const categories = defaultCats.concat(savedCats);
     const data = {};
 
     categories.forEach(cat => {
       data[cat] = [];
-        document.querySelectorAll(`#${cat} .task`).forEach(task => {
-          const textElem = task.querySelector("span");
-          const text = textElem ? textElem.textContent.trim() : "";
-          const checked = task.querySelector("input").checked;
-          data[cat].push({ text, checked });
-        });
+      document.querySelectorAll(`#${cat} .task`).forEach(task => {
+        const textElem = task.querySelector("span");
+        const text = textElem ? textElem.textContent.trim() : "";
+        const checked = task.querySelector("input").checked;
+        data[cat].push({ text, checked });
+      });
     });
 
     localStorage.setItem(`billionaireTasks_${currentUser}`, JSON.stringify(data));
@@ -342,12 +370,11 @@ function addCategory() {
 
   // ✅ Initialize everything on page load
   window.onload = () => {
-
+    loadCategories();
     loadTasks();
     loadNotes();
-history = JSON.parse(localStorage.getItem(`billionaireHistory_${currentUser}`) || "[]");
-updateHistoryLog();
-
+    history = JSON.parse(localStorage.getItem(`billionaireHistory_${currentUser}`) || "[]");
+    updateHistoryLog();
   };
 
 function addCategoryToDropdowns(id, name) {
@@ -371,6 +398,14 @@ function createCategorySection(id, name) {
   section.id = id;
   section.innerHTML = `<h3>${name}</h3>`;
   document.body.insertBefore(section, document.getElementById("notesList").parentElement);
+}
+
+function loadCategories(){
+  const saved = JSON.parse(localStorage.getItem(`billionaireCategories_${currentUser}`) || "[]");
+  saved.forEach(({id, name}) => {
+    addCategoryToDropdowns(id, name);
+    createCategorySection(id, name);
+  });
 }
 </script>
 
