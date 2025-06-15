@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign Up - Billionaire Dashboard</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 30px;
+      max-width: 400px;
+      margin: auto;
+      background: #f4f4f4;
+    }
+    .signup-box {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    input[type="text"], input[type="password"] {
+      padding: 8px;
+      font-size: 16px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    button {
+      padding: 8px 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="signup-box">
+  <h2>Create Account</h2>
+  <input type="text" id="newUsername" placeholder="Username">
+  <input type="password" id="newPassword" placeholder="Password">
+  <button onclick="signup()">Sign Up</button>
+</div>
+<script>
+function signup() {
+  const user = document.getElementById('newUsername').value;
+  const pass = document.getElementById('newPassword').value;
+  if(!user || !pass) {
+    alert('Please enter a username and password');
+    return;
+  }
+  const accounts = JSON.parse(localStorage.getItem('accounts') || '{}');
+  if(accounts[user]) {
+    alert('Account already exists');
+    return;
+  }
+  accounts[user] = pass;
+  localStorage.setItem('accounts', JSON.stringify(accounts));
+  localStorage.setItem('billionaireLoggedIn', 'true');
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>
