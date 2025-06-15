@@ -47,7 +47,7 @@
   const accounts = JSON.parse(localStorage.getItem('accounts') || '{}');
   if ((accounts[user] && accounts[user] === pass) ||
       (user === 'admin' && pass === 'password')) {
-    localStorage.setItem('billionaireLoggedIn', 'true');
+    localStorage.setItem('billionaireLoggedIn', user);
     window.location.href = 'index.html';
   } else {
     alert('Incorrect credentials');

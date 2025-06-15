@@ -52,7 +52,7 @@ function signup() {
   }
   accounts[user] = pass;
   localStorage.setItem('accounts', JSON.stringify(accounts));
-  localStorage.setItem('billionaireLoggedIn', 'true');
+  localStorage.setItem('billionaireLoggedIn', user);
   window.location.href = 'index.html';
 }
 </script>
