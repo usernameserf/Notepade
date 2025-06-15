@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Account Settings</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 30px;
+      max-width: 400px;
+      margin: auto;
+      background: #f4f4f4;
+    }
+    .account-box {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    input[type="text"], input[type="password"] {
+      padding: 8px;
+      font-size: 16px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    button {
+      padding: 8px 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="account-box">
+  <h2>Account Settings</h2>
+  <input type="text" id="username" disabled>
+  <input type="password" id="newPassword" placeholder="New password">
+  <button onclick="saveChanges()">Save Changes</button>
+  <div style="margin-top:10px;">
+    <button onclick="window.location.href='index.html'">Back</button>
+  </div>
+</div>
+<script>
+const currentUser = localStorage.getItem('billionaireLoggedIn');
+if(!currentUser){
+  window.location.href = 'login.html';
+}
+document.getElementById('username').value = currentUser;
+function saveChanges(){
+  const pass = document.getElementById('newPassword').value;
+  if(!pass){
+    alert('Enter a new password');
+    return;
+  }
+  const accounts = JSON.parse(localStorage.getItem('accounts') || '{}');
+  accounts[currentUser] = pass;
+  localStorage.setItem('accounts', JSON.stringify(accounts));
+  alert('Changes saved');
+  document.getElementById('newPassword').value = '';
+}
+</script>
+</body>
+</html>
