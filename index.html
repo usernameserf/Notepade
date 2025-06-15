@@ -65,7 +65,12 @@
   </style>
 </head>
 <body>
-<script>if(localStorage.getItem("billionaireLoggedIn")!="true"){window.location.href="login.html";}</script>
+<script>
+const currentUser = localStorage.getItem("billionaireLoggedIn");
+if(!currentUser){
+  window.location.href = "login.html";
+}
+</script>
 <div style="text-align:right;"><button onclick="logout()">Log Out</button></div>
 <!-- ✅ Smart Productivity Timer -->
 <div class="section">
@@ -205,7 +210,7 @@
         completedAt: new Date().toLocaleString()
       };
       history.push(logEntry);
-      localStorage.setItem("billionaireHistory", JSON.stringify(history));
+      localStorage.setItem(`billionaireHistory_${currentUser}`, JSON.stringify(history));
       updateHistoryLog();
     }
   };
@@ -229,9 +234,9 @@ function addCategory() {
   }
 
   // Save to localStorage
-  const saved = JSON.parse(localStorage.getItem("billionaireCategories") || "[]");
+  const saved = JSON.parse(localStorage.getItem(`billionaireCategories_${currentUser}`) || "[]");
   saved.push({ id, name: newName });
-  localStorage.setItem("billionaireCategories", JSON.stringify(saved));
+  localStorage.setItem(`billionaireCategories_${currentUser}`, JSON.stringify(saved));
 
   // Create dropdown options
   addCategoryToDropdowns(id, newName);
@@ -256,13 +261,13 @@ function addCategory() {
       });
     });
 
-    localStorage.setItem("billionaireTasks", JSON.stringify(data));
+    localStorage.setItem(`billionaireTasks_${currentUser}`, JSON.stringify(data));
     showSavedNotification();
   }
 
   // ✅ Load tasks from localStorage and display them
   function loadTasks() {
-    const data = JSON.parse(localStorage.getItem("billionaireTasks") || "{}");
+    const data = JSON.parse(localStorage.getItem(`billionaireTasks_${currentUser}`) || "{}");
     Object.keys(data).forEach(category => {
       const section = document.getElementById(category);
       data[category].forEach(({ text, checked }) => {
@@ -308,13 +313,13 @@ function addCategory() {
   function saveNotes() {
     const notes = [];
     document.querySelectorAll("#notesList .note span").forEach(n => notes.push(n.textContent));
-    localStorage.setItem("billionaireNotes", JSON.stringify(notes));
+    localStorage.setItem(`billionaireNotes_${currentUser}`, JSON.stringify(notes));
     showSavedNotification();
   }
 
   // ✅ Load saved notes from localStorage
   function loadNotes() {
-    const saved = JSON.parse(localStorage.getItem("billionaireNotes") || "[]");
+    const saved = JSON.parse(localStorage.getItem(`billionaireNotes_${currentUser}`) || "[]");
     const noteList = document.getElementById("notesList");
     saved.forEach(text => {
       const note = createNoteElement(text);
@@ -327,7 +332,7 @@ function addCategory() {
 
     loadTasks();
     loadNotes();
-history = JSON.parse(localStorage.getItem("billionaireHistory") || "[]");
+history = JSON.parse(localStorage.getItem(`billionaireHistory_${currentUser}`) || "[]");
 updateHistoryLog();
 
   };
@@ -458,7 +463,7 @@ function updateHistoryLog() {
     deleteBtn.onclick = () => {
       if (confirm("Remove this entry from the log?")) {
         history.splice(index, 1);
-        localStorage.setItem("billionaireHistory", JSON.stringify(history));
+        localStorage.setItem(`billionaireHistory_${currentUser}`, JSON.stringify(history));
         updateHistoryLog();
       }
     };
