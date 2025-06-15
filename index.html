@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Billionaire Dashboard</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 30px;
+      max-width: 800px;
+      margin: auto;
+      background: #f4f4f4;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+
+    .task {
+      margin-bottom: 10px;
+    }
+
+    .note {
+      background: #fff3cd;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #saveNotification {
+      display: none;
+      text-align: center;
+      padding: 10px;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    input[type="text"], select {
+      padding: 8px;
+      font-size: 16px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+
+    button {
+      padding: 8px 12px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+
+    h3 {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<!-- ✅ Smart Productivity Timer -->
+<div class="section">
+  <h2>⏱️ Focus Timer</h2>
+
+  <!-- Display -->
+  <div id="timerDisplay" style="font-size: 32px; font-weight: bold; margin-bottom: 20px;">00:00</div>
+
+  <!-- Presets -->
+  <!-- ✅ Preset Timer Boxes -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px;">
+  <div style="background:#e3f2fd; padding:10px; border-radius:8px; text-align:center; cursor:pointer;"
+       onclick="setTimer(25, 5, 'Pomodoro')">
+    🍅 Pomodoro<br><small>25 min focus + 5 break</small>
+  </div>
+
+  <div style="background:#fff3cd; padding:10px; border-radius:8px; text-align:center; cursor:pointer;"
+       onclick="setTimer(52, 17, 'Deep Work')">
+    🧠 Deep Work<br><small>52 min focus + 17 break</small>
+  </div>
+
+  <div style="background:#fce4ec; padding:10px; border-radius:8px; text-align:center; cursor:pointer;"
+       onclick="setTimer(15, 3, 'Speed Sprint')">
+    ⚡ Speed Sprint<br><small>15 min + 3 break</small>
+  </div>
+
+  <div style="background:#ede7f6; padding:10px; border-radius:8px; text-align:center; cursor:pointer;"
+       onclick="setTimer(90, 20, '90-Min Focus')">
+    🎯 90-Min Focus<br><small>90 min + 20 break</small>
+  </div>
+</div>
+
+
+  <!-- Manual Entry -->
+  <div style="margin-top: 10px;">
+    <input type="number" id="timerInput" placeholder="Custom min..." style="width:120px;">
+    <button onclick="startTimer()">Start</button>
+    <button onclick="pauseTimer()">Pause</button>
+    <button onclick="resetTimer()">Reset</button>
+  </div>
+</div>
+
+
+<!-- ✅ Save Notification -->
+<div id="saveNotification">✅ Saved</div>
+
+<!-- ✅ Task Input Section -->
+<!-- ✅ Task Input Section -->
+<div class="section">
+  <h2>Add New Task</h2>
+  <input type="text" id="newTaskInput" placeholder="Task description...">
+
+  <select id="categorySelect">
+    <option value="maintenance">🛠 Maintenance & Management</option>
+    <option value="strategy">📦 Strategic Additions</option>
+    <option value="savings">💾 Operational Savings</option>
+    <option value="protection">🛡 Brand Protection</option>
+  </select>
+
+  <button onclick="addTask()">Add Task</button>
+
+  <hr style="margin: 20px 0;">
+
+  <h3>Add New Category</h3>
+  <input type="text" id="newCategoryInput" placeholder="e.g. Sales, Hiring, Outreach">
+  <button onclick="addCategory()">Add Category</button>
+</div>
+
+
+<!-- ✅ Category Sections for Tasks -->
+<div class="section" id="maintenance">
+  <h3>🛠 Maintenance & Management</h3>
+</div>
+
+<div class="section" id="strategy">
+  <h3>📦 Strategic Additions</h3>
+</div>
+
+<div class="section" id="savings">
+  <h3>💾 Operational Savings</h3>
+</div>
+
+<div class="section" id="protection">
+  <h3>🛡 Brand Protection</h3>
+</div>
+
+<!-- ✅ Notes Section -->
+<div class="section">
+  <h2>Notes</h2>
+  <input type="text" id="noteInput" placeholder="Add a note...">
+  <button onclick="addNote()">Add Note</button>
+  <div id="notesList"></div>
+</div>
+
+<script>
+  // ✅ Show "Saved" notification bar
+  function showSavedNotification() {
+    const box = document.getElementById("saveNotification");
+    box.style.display = "block";
+    box.style.opacity = 1;
+
+    setTimeout(() => {
+      box.style.opacity = 0;
+      setTimeout(() => { box.style.display = "none"; }, 500);
+    }, 2000);
+  }
+
+  // ✅ Add a new task to selected category
+  function addTask() {
+    const input = document.getElementById("newTaskInput");
+    const text = input.value.trim();
+    const category = document.getElementById("categorySelect").value;
+    if (!text) return;
+
+    const task = createTaskElement(text, false, category);
+    document.getElementById(category).appendChild(task);
+    input.value = "";
+    saveTasks();
+  }
+
+  // ✅ Create task DOM element
+  function createTaskElement(text, checked, category) {
+  const div = document.createElement("div");
+  div.className = "task";
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = checked;
+
+  checkbox.onchange = () => {
+    saveTasks();
+    if (checkbox.checked) {
+      const logEntry = {
+        task: text,
+        category,
+        timerUsed: currentTimerLabel,
+        completedAt: new Date().toLocaleString()
+      };
+      history.push(logEntry);
+      localStorage.setItem("billionaireHistory", JSON.stringify(history));
+      updateHistoryLog();
+    }
+  };
+
+  div.appendChild(checkbox);
+  div.appendChild(document.createTextNode(" " + text));
+  return div;
+
+}
+function addCategory() {
+  const input = document.getElementById("newCategoryInput");
+  const newName = input.value.trim();
+  if (!newName) return alert("Enter a category name.");
+
+  const id = newName.toLowerCase().replace(/\s+/g, '-');
+
+  // Prevent duplicates
+  if (document.getElementById(id)) {
+    alert("That category already exists.");
+    return;
+  }
+
+  // Save to localStorage
+  const saved = JSON.parse(localStorage.getItem("billionaireCategories") || "[]");
+  saved.push({ id, name: newName });
+  localStorage.setItem("billionaireCategories", JSON.stringify(saved));
+
+  // Create dropdown options
+  addCategoryToDropdowns(id, newName);
+
+  // Create section
+  createCategorySection(id, newName);
+
+  input.value = "";
+}
+
+  // ✅ Save all tasks by category to localStorage
+  function saveTasks() {
+    const categories = ["maintenance", "strategy", "savings", "protection"];
+    const data = {};
+
+    categories.forEach(cat => {
+      data[cat] = [];
+      document.querySelectorAll(`#${cat} .task`).forEach(task => {
+        const text = task.textContent.trim();
+        const checked = task.querySelector("input").checked;
+        data[cat].push({ text, checked });
+      });
+    });
+
+    localStorage.setItem("billionaireTasks", JSON.stringify(data));
+    showSavedNotification();
+  }
+
+  // ✅ Load tasks from localStorage and display them
+  function loadTasks() {
+    const data = JSON.parse(localStorage.getItem("billionaireTasks") || "{}");
+    Object.keys(data).forEach(category => {
+      const section = document.getElementById(category);
+      data[category].forEach(({ text, checked }) => {
+        const task = createTaskElement(text, checked, category);
+        section.appendChild(task);
+      });
+    });
+  }
+
+  // ✅ Add a new note
+  function addNote() {
+    const input = document.getElementById("noteInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    const note = createNoteElement(text);
+    document.getElementById("notesList").appendChild(note);
+    input.value = "";
+    saveNotes();
+  }
+
+  // ✅ Create note DOM element
+  function createNoteElement(text) {
+    const div = document.createElement("div");
+    div.className = "note";
+
+    const span = document.createElement("span");
+    span.textContent = text;
+
+    const btn = document.createElement("button");
+    btn.textContent = "🗑";
+    btn.onclick = () => {
+      div.remove();
+      saveNotes();
+    };
+
+    div.appendChild(span);
+    div.appendChild(btn);
+    return div;
+  }
+
+  // ✅ Save all notes to localStorage
+  function saveNotes() {
+    const notes = [];
+    document.querySelectorAll("#notesList .note span").forEach(n => notes.push(n.textContent));
+    localStorage.setItem("billionaireNotes", JSON.stringify(notes));
+    showSavedNotification();
+  }
+
+  // ✅ Load saved notes from localStorage
+  function loadNotes() {
+    const saved = JSON.parse(localStorage.getItem("billionaireNotes") || "[]");
+    const noteList = document.getElementById("notesList");
+    saved.forEach(text => {
+      const note = createNoteElement(text);
+      noteList.appendChild(note);
+    });
+  }
+
+  // ✅ Initialize everything on page load
+  window.onload = () => {
+
+    loadTasks();
+    loadNotes();
+history = JSON.parse(localStorage.getItem("billionaireHistory") || "[]");
+updateHistoryLog();
+
+  };
+
+function addCategoryToDropdowns(id, name) {
+  const taskSelect = document.getElementById("categorySelect");
+  const removeSelect = document.getElementById("removeCategorySelect");
+
+  const option1 = document.createElement("option");
+  option1.value = id;
+  option1.textContent = name;
+  taskSelect.appendChild(option1);
+
+  const option2 = document.createElement("option");
+  option2.value = id;
+  option2.textContent = name;
+  removeSelect.appendChild(option2);
+}
+
+function createCategorySection(id, name) {
+  const section = document.createElement("div");
+  section.className = "section";
+  section.id = id;
+  section.innerHTML = `<h3>${name}</h3>`;
+  document.body.insertBefore(section, document.getElementById("notesList").parentElement);
+}
+</script>
+
+</body>
+</html>
+<script>
+// ✅ Timer Setup
+let currentTimerLabel = "None"; // Tracks which timer is active
+let history = []; // Stores task completion data
+let timerInterval;
+let timeRemaining = 0;
+let isPaused = false;
+let breakTime = 0;
+let inBreak = false;
+
+// ✅ Update the timer display
+function updateTimerDisplay() {
+  const min = String(Math.floor(timeRemaining / 60)).padStart(2, '0');
+  const sec = String(timeRemaining % 60).padStart(2, '0');
+  document.getElementById("timerDisplay").textContent = `${min}:${sec}`;
+}
+
+// ✅ Set timer using a preset
+function setTimer(mins, breakMins = 0, label = "Custom") {
+  document.getElementById("timerInput").value = mins;
+  breakTime = breakMins;
+  currentTimerLabel = label;
+  startTimer();
+}
+
+// ✅ Start the timer
+function startTimer() {
+  const minutes = parseInt(document.getElementById("timerInput").value);
+  if (isNaN(minutes) || minutes <= 0) return alert("Enter a valid time in minutes.");
+
+  if (!isPaused) timeRemaining = minutes * 60;
+  isPaused = false;
+  inBreak = false;
+
+  updateTimerDisplay();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (timeRemaining > 0) {
+      timeRemaining--;
+      updateTimerDisplay();
+    } else {
+      clearInterval(timerInterval);
+      // ✅ If break time is set, start break automatically
+      if (breakTime > 0 && !inBreak) {
+        alert("✅ Focus session done! Break time starts now.");
+        inBreak = true;
+        timeRemaining = breakTime * 60;
+        updateTimerDisplay();
+        startTimer(); // restart with break
+      } else {
+        alert("⏰ Time's up!");
+      }
+    }
+  }, 1000);
+}
+
+// ✅ Pause the timer
+function pauseTimer() {
+  clearInterval(timerInterval);
+  isPaused = true;
+}
+
+// ✅ Reset the timer
+function resetTimer() {
+  clearInterval(timerInterval);
+  timeRemaining = 0;
+  isPaused = false;
+  inBreak = false;
+  updateTimerDisplay();
+}
+
+// Update History For Logger
+function updateHistoryLog() {
+  const log = document.getElementById("historyLog");
+  log.innerHTML = "";
+
+  if (history.length === 0) {
+    log.innerHTML = "<i>No completed tasks yet.</i>";
+    return;
+  }
+
+  history.slice().reverse().forEach((entry, i) => {
+    const index = history.length - 1 - i; // reverse index for proper delete
+
+    const logItem = document.createElement("div");
+    logItem.style.marginBottom = "10px";
+    logItem.innerHTML = `
+      ✅ <strong>${entry.task}</strong> (${entry.category})<br>
+      Timer: <b>${entry.timerUsed}</b> | Completed: ${entry.completedAt}
+    `;
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "🗑 Remove";
+    deleteBtn.style.marginTop = "5px";
+    deleteBtn.style.background = "#ffdddd";
+    deleteBtn.style.border = "none";
+    deleteBtn.style.padding = "4px 8px";
+    deleteBtn.style.cursor = "pointer";
+    deleteBtn.style.borderRadius = "6px";
+    deleteBtn.onclick = () => {
+      if (confirm("Remove this entry from the log?")) {
+        history.splice(index, 1);
+        localStorage.setItem("billionaireHistory", JSON.stringify(history));
+        updateHistoryLog();
+      }
+    };
+
+    logItem.appendChild(document.createElement("br"));
+    logItem.appendChild(deleteBtn);
+    logItem.appendChild(document.createElement("hr"));
+    log.appendChild(logItem);
+  });
+}
+</script>
+<<!-- ✅ Productivity Log -->
+
+<div class="section">
+  <h2>📊 Task Completion Log</h2>
+  <div id="historyLog" style="font-family: monospace;"></div>
+</div>
+
+</body>
+</html>
