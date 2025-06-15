@@ -193,33 +193,45 @@ if(!currentUser){
 
   // ✅ Create task DOM element
   function createTaskElement(text, checked, category) {
-  const div = document.createElement("div");
-  div.className = "task";
+    const div = document.createElement("div");
+    div.className = "task";
 
-  const checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  checkbox.checked = checked;
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = checked;
 
-  checkbox.onchange = () => {
-    saveTasks();
-    if (checkbox.checked) {
-      const logEntry = {
-        task: text,
-        category,
-        timerUsed: currentTimerLabel,
-        completedAt: new Date().toLocaleString()
-      };
-      history.push(logEntry);
-      localStorage.setItem(`billionaireHistory_${currentUser}`, JSON.stringify(history));
-      updateHistoryLog();
-    }
-  };
+    checkbox.onchange = () => {
+      saveTasks();
+      if (checkbox.checked) {
+        const logEntry = {
+          task: text,
+          category,
+          timerUsed: currentTimerLabel,
+          completedAt: new Date().toLocaleString()
+        };
+        history.push(logEntry);
+        localStorage.setItem(`billionaireHistory_${currentUser}`, JSON.stringify(history));
+        updateHistoryLog();
+      }
+    };
 
-  div.appendChild(checkbox);
-  div.appendChild(document.createTextNode(" " + text));
-  return div;
+    const span = document.createElement("span");
+    span.textContent = " " + text;
 
-}
+    const btn = document.createElement("button");
+    btn.textContent = "🗑";
+    btn.style.marginLeft = "8px";
+    btn.onclick = () => {
+      div.remove();
+      saveTasks();
+    };
+
+    div.appendChild(checkbox);
+    div.appendChild(span);
+    div.appendChild(btn);
+    return div;
+
+  }
 function addCategory() {
   const input = document.getElementById("newCategoryInput");
   const newName = input.value.trim();
@@ -254,11 +266,12 @@ function addCategory() {
 
     categories.forEach(cat => {
       data[cat] = [];
-      document.querySelectorAll(`#${cat} .task`).forEach(task => {
-        const text = task.textContent.trim();
-        const checked = task.querySelector("input").checked;
-        data[cat].push({ text, checked });
-      });
+        document.querySelectorAll(`#${cat} .task`).forEach(task => {
+          const textElem = task.querySelector("span");
+          const text = textElem ? textElem.textContent.trim() : "";
+          const checked = task.querySelector("input").checked;
+          data[cat].push({ text, checked });
+        });
     });
 
     localStorage.setItem(`billionaireTasks_${currentUser}`, JSON.stringify(data));
