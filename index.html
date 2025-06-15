@@ -65,6 +65,8 @@
   </style>
 </head>
 <body>
+<script>if(localStorage.getItem("billionaireLoggedIn")!="true"){window.location.href="login.html";}</script>
+<div style="text-align:right;"><button onclick="logout()">Log Out</button></div>
 <!-- ✅ Smart Productivity Timer -->
 <div class="section">
   <h2>⏱️ Focus Timer</h2>
@@ -354,8 +356,6 @@ function createCategorySection(id, name) {
 }
 </script>
 
-</body>
-</html>
 <script>
 // ✅ Timer Setup
 let currentTimerLabel = "None"; // Tracks which timer is active
@@ -469,8 +469,9 @@ function updateHistoryLog() {
     log.appendChild(logItem);
   });
 }
+function logout(){localStorage.removeItem("billionaireLoggedIn");window.location.href="login.html";}
 </script>
-<<!-- ✅ Productivity Log -->
+<!-- ✅ Productivity Log -->
 
 <div class="section">
   <h2>📊 Task Completion Log</h2>
